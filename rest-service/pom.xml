@@ -10,9 +10,9 @@
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>rest-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>rest-service</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Project for rest service with spring</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
