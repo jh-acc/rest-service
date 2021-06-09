@@ -12,7 +12,7 @@
 	<artifactId>rest-service</artifactId>
 	<version>1.0.0</version>
 	<name>rest-service</name>
-	<description>Project for rest service with spring</description>
+	<description>Project for rest service with spring </description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
