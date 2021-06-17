@@ -1,0 +1,125 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+name: rest-service-template
+metadata:
+  name: rest-service-template
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream                   
+  metadata:
+    name: ${APP_NAME}       
+    labels:
+      app: ${LABEL}
+  spec:
+    lookupPolicy:
+      local: true              # allow it to pull the image from open shift registry
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${LABEL}
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}:latest
+    postCommit: {}
+    resources: {}
+    source:
+      git:
+        uri: https://github.com/jh-acc/rest-service
+      contextDir: /
+      type: Git      
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: java:openjdk-11-el7
+          namespace: openshift
+      type: Source
+    triggers:
+    - type: GitHub
+      github:
+        secret: "secret101"
+    - type: ConfigChange
+    - type: ImageChange
+    imageChange: {}
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${LABEL}
+  spec:
+    replicas: 1
+    selector:
+      app: ${LABEL}
+      deploymentconfig: ${APP_NAME}
+    strategy:
+      resources: {}
+    template:
+      metadata:
+        labels:
+          app: ${LABEL}
+          deploymentconfig: ${APP_NAME}
+      spec:
+        containers:
+        - name: ${APP_NAME}
+          image: ${APP_NAME}:latest   
+    test: false
+    triggers:
+    - type: ConfigChange
+    - type: GitHub            
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${LABEL}
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: 8443-tcp
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    - name: 8778-tcp
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    selector:
+      app: ${LABEL}
+      deploymentconfig: ${APP_NAME}
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: ${APP_NAME}
+    labels:
+      app: ${LABEL}
+  spec:
+    port:
+      targetPort: 8080-tcp
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+    to:
+      kind: Service
+      name: ${APP_NAME}
+      weight: 100
+    wildcardPolicy: None
+parameters:
+  - name: APP_NAME 
+    description: The name of the application you want to create
+    displayName: App name
+    required: true
+    value: rest-service
+  - name: LABEL 
+    description: The name of the label you want to use
+    displayName: label name
+    required: true
+    value: rest-service
